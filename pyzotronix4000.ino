@@ -90,7 +90,7 @@ void handleReceivedTinyIRData(uint16_t aAddress, uint8_t aCommand, bool isRepeat
 
 void loop() {
   if (digitalRead(TOGGLE_PIN) == LOW) {
-    delay(200);
+    delay(400); // debounce
     togglePower();
   }
   if (poweringUp) {
