@@ -26,13 +26,16 @@ void setup() {
 void handleReceivedTinyIRData(uint16_t aAddress, uint8_t aCommand, bool isRepeat) {
   switch (aCommand) {
     case 0:
+    case 0x80:
       if (!isRepeat) {
          togglePower();
       }
       break;
     case 4:
+    case 0xAA:
       volUp = true; break;
     case 8:
+    case 0x6A:
       volDown = true; break;
   }
 }
