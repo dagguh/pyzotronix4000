@@ -27,8 +27,6 @@ void turnVolume(int pin) {
     delay(40); // knob coarseness
     digitalWrite(pin, LOW);
     delay(30); // knob slowness
-    volUp = false;
-    volDown = false;
   }
 }
 
@@ -101,4 +99,6 @@ void loop() {
   if (volDown) {
     turnVolume(VOL_DOWN_PIN);
   }
+  volUp = false;
+  volDown = false;
 }
