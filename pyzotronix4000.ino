@@ -16,8 +16,10 @@ bool volDown = false;
 void togglePower() {
   if (powered) {
     poweringDown = true;
+    poweringUp = false;
   } else {
     poweringUp = true;
+    poweringDown = false;
   }
 }
 
@@ -96,21 +98,21 @@ void loop() {
   if (poweringUp) {
     digitalWrite(POWER_PIN, HIGH);
     powered = true;
+    poweringUp = false;
   }
   if (poweringDown) {
     digitalWrite(POWER_PIN, LOW);
     powered = false;
     delay(5000); // apparently the DAC needs some time after powering down
     // would be nice to flash a LED to indicate this delay
+    poweringDown = false;
   }
   if (volUp) {
     turnVolume(VOL_UP_PIN);
+    volUp = false;
   }
   if (volDown) {
     turnVolume(VOL_DOWN_PIN);
+    volDown = false;
   }
-  poweringUp = false;
-  poweringDown = false;
-  volUp = false;
-  volDown = false;
 }
