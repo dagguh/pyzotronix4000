@@ -7,22 +7,22 @@
 
 #include "TinyIRReceiver.hpp"
 
-bool powerOn = false;
+bool powered = false;
+bool poweringUp = false;
+bool poweringDown = false;
 bool volUp = false;
 bool volDown = false;
 
 void togglePower() {
-  if (powerOn) {
-    digitalWrite(POWER_PIN, LOW);
-    powerOn = false;
+  if (powered) {
+    poweringDown = true;
   } else {
-    digitalWrite(POWER_PIN, HIGH);
-    powerOn = true;
+    poweringUp = true;
   }
 }
 
 void turnVolume(int pin) {
-  if (powerOn) {
+  if (powered) {
     digitalWrite(pin, HIGH);
     delay(40); // knob coarseness
     digitalWrite(pin, LOW);
@@ -93,12 +93,24 @@ void loop() {
     delay(200);
     togglePower();
   }
+  if (poweringUp) {
+    digitalWrite(POWER_PIN, HIGH);
+    powered = true;
+  }
+  if (poweringDown) {
+    digitalWrite(POWER_PIN, LOW);
+    powered = false;
+    delay(5000); // apparently the DAC needs some time after powering down
+    // would be nice to flash a LED to indicate this delay
+  }
   if (volUp) {
     turnVolume(VOL_UP_PIN);
   }
   if (volDown) {
     turnVolume(VOL_DOWN_PIN);
   }
+  poweringUp = false;
+  poweringDown = false;
   volUp = false;
   volDown = false;
 }
