@@ -11,48 +11,6 @@ bool powerOn = false;
 bool volUp = false;
 bool volDown = false;
 
-void setup() {
-  // Serial.begin(115200);
-  pinMode(VOL_UP_PIN, OUTPUT);
-  pinMode(VOL_DOWN_PIN, OUTPUT);
-  pinMode(POWER_PIN, OUTPUT);
-  pinMode(TOGGLE_PIN, INPUT_PULLUP);
-  digitalWrite(VOL_DOWN_PIN, LOW);
-  digitalWrite(VOL_UP_PIN, LOW);
-  digitalWrite(POWER_PIN, LOW);
-  initPCIInterruptForTinyReceiver();
-}
-
-void handleReceivedTinyIRData(uint16_t aAddress, uint8_t aCommand, bool isRepeat) {
-  switch (aCommand) {
-    case 0:
-    case 0x80:
-      if (!isRepeat) {
-         togglePower();
-      }
-      break;
-    case 4:
-    case 0xAA:
-      volUp = true; break;
-    case 8:
-    case 0x6A:
-      volDown = true; break;
-  }
-}
-
-void loop() {
-  if (digitalRead(TOGGLE_PIN) == LOW) {
-    delay(200);
-    togglePower();
-  }
-  if (volUp) {
-    turnVolume(VOL_UP_PIN);
-  }
-  if (volDown) {
-    turnVolume(VOL_DOWN_PIN);
-  }
-}
-
 void togglePower() {
   if (powerOn) {
     digitalWrite(POWER_PIN, LOW);
@@ -71,5 +29,76 @@ void turnVolume(int pin) {
     delay(30); // knob slowness
     volUp = false;
     volDown = false;
+  }
+}
+
+struct Remote {
+  const uint8_t powerToggle;
+  const uint8_t volumeUp;
+  const uint8_t volumeDown;
+
+  bool receive(uint8_t aCommand, bool isRepeat) {
+    if (powerToggle == aCommand && !isRepeat) {
+      togglePower();
+      return true;
+    }
+    if (volumeUp == aCommand) {
+      volUp = true;
+      return true;
+    }
+    if (volumeDown == aCommand) {
+      volDown = true;
+      return true;
+    }
+    return false;
+  }
+};
+
+const Remote y04g0024 = {
+  .powerToggle = 0,
+  .volumeUp = 4,
+  .volumeDown = 8
+};
+
+const Remote z906 = {
+  .powerToggle = 0x80,
+  .volumeUp = 0xAA,
+  .volumeDown = 0x6A
+};
+
+Remote remotes[] = {z906, y04g0024};
+
+void setup() {
+  // Serial.begin(115200);
+  pinMode(VOL_UP_PIN, OUTPUT);
+  pinMode(VOL_DOWN_PIN, OUTPUT);
+  pinMode(POWER_PIN, OUTPUT);
+  pinMode(TOGGLE_PIN, INPUT_PULLUP);
+  digitalWrite(VOL_DOWN_PIN, LOW);
+  digitalWrite(VOL_UP_PIN, LOW);
+  digitalWrite(POWER_PIN, LOW);
+  initPCIInterruptForTinyReceiver();
+}
+
+void handleReceivedTinyIRData(uint16_t aAddress, uint8_t aCommand, bool isRepeat) {
+  int remoteCount = sizeof(remotes) / sizeof(remotes[0]);
+  for (int i = 0; i < remoteCount; i++) {
+    bool handled = remotes[i].receive(aCommand, isRepeat);
+    if (handled) {
+      break;
+    }
+  }
+}
+
+void loop() {
+  if (digitalRead(TOGGLE_PIN) == LOW) {
+    delay(200);
+    togglePower();
+  }
+  if (volUp) {
+    turnVolume(VOL_UP_PIN);
+  }
+  if (volDown) {
+    turnVolume(VOL_DOWN_PIN);
   }
 }
